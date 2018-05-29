@@ -57,7 +57,7 @@ namespace Cake.Common.Tests.Unit.Tools.GitVersion
             }
 
             [Fact]
-            public void Should_Throw_If_Has_A_Non_Zero_Exit_Code()
+            public void Should_Not_Throw_If_Has_A_Non_Zero_Exit_Code_And_Default()
             {
                 // Given
                 var fixture = new GitVersionRunnerFixture(
@@ -68,6 +68,7 @@ namespace Cake.Common.Tests.Unit.Tools.GitVersion
                     });
                 fixture.GivenProcessExitsWithCode(1);
                 fixture.Settings.OutputType = GitVersionOutput.Json;
+                fixture.Settings.DefaultIfFailure = true;
 
                 // When
                 var result = fixture.RunGitVersion();
@@ -99,6 +100,21 @@ namespace Cake.Common.Tests.Unit.Tools.GitVersion
                 Assert.Equal(expect.CommitsSinceVersionSource, result.CommitsSinceVersionSource);
                 Assert.Equal(expect.CommitsSinceVersionSourcePadded, result.CommitsSinceVersionSourcePadded);
                 Assert.Equal(expect.CommitDate, result.CommitDate);
+            }
+
+            [Fact]
+            public void Should_Throw_If_Has_A_Non_Zero_Exit_Code_And_No_Default()
+            {
+                // Given
+                var fixture = new GitVersionRunnerFixture();
+                fixture.GivenProcessExitsWithCode(1);
+
+                // When
+                var result = Record.Exception(() => fixture.Run());
+
+                // Then
+                Assert.IsType<CakeException>(result);
+                Assert.Equal("GitVersion: Process returned an error (exit code 1).", result?.Message);
             }
 
             [Fact]

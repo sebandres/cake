@@ -77,5 +77,10 @@ namespace Cake.Common.Tools.GitVersion
         /// Gets or sets the path to the log file.
         /// </summary>
         public FilePath LogFilePath { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether it should return an empty GitVersion object or if the execution should fail.
+        /// </summary>
+        public bool DefaultIfFailure { get; set; }
     }
 }

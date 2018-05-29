@@ -21,6 +21,7 @@ namespace Cake.Common.Tools.GitVersion
     public sealed class GitVersionRunner : Tool<GitVersionSettings>
     {
         private readonly ICakeLog _log;
+        private GitVersionSettings _settings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GitVersionRunner"/> class.
@@ -51,6 +52,8 @@ namespace Cake.Common.Tools.GitVersion
             {
                 throw new ArgumentNullException(nameof(settings));
             }
+
+            this._settings = settings;
 
             if (settings.OutputType != GitVersionOutput.BuildServer)
             {
@@ -198,6 +201,11 @@ namespace Cake.Common.Tools.GitVersion
             // Did an error occur?
             if (exitCode != 0)
             {
+                if (!this._settings.DefaultIfFailure)
+                {
+                    base.ProcessExitCode(exitCode);
+                }
+
                 const string message = "{0}: Process returned an error (exit code {1}).";
                 _log.Warning(string.Format(CultureInfo.InvariantCulture, message, GetToolName(), exitCode));
             }
