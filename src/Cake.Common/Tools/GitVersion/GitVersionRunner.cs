@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
@@ -58,11 +59,18 @@ namespace Cake.Common.Tools.GitVersion
                 Run(settings, GetArguments(settings), new ProcessSettings { RedirectStandardOutput = true },
                 process => jsonString = string.Join("\n", process.GetStandardOutput()));
 
-                var jsonSerializer = new DataContractJsonSerializer(typeof(GitVersionInternal));
-
-                using (var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonString)))
+                if (!string.IsNullOrEmpty(jsonString))
                 {
-                    return (jsonSerializer.ReadObject(jsonStream) as GitVersionInternal)?.GitVersion;
+                    var jsonSerializer = new DataContractJsonSerializer(typeof(GitVersionInternal));
+
+                    using (var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonString)))
+                    {
+                        return (jsonSerializer.ReadObject(jsonStream) as GitVersionInternal)?.GitVersion;
+                    }
+                }
+                else
+                {
+                    return new GitVersion();
                 }
             }
 
@@ -178,6 +186,21 @@ namespace Cake.Common.Tools.GitVersion
         protected override IEnumerable<string> GetToolExecutableNames()
         {
             return new[] { "GitVersion.exe" };
+        }
+
+        /// <summary>
+        /// Customized exit code handling.
+        /// Standard behavior is to fail when non zero.
+        /// </summary>
+        /// <param name="exitCode">The process exit code</param>
+        protected override void ProcessExitCode(int exitCode)
+        {
+            // Did an error occur?
+            if (exitCode != 0)
+            {
+                const string message = "{0}: Process returned an error (exit code {1}).";
+                _log.Warning(string.Format(CultureInfo.InvariantCulture, message, GetToolName(), exitCode));
+            }
         }
     }
 }
